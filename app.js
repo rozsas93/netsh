@@ -3,7 +3,7 @@ const io = require('socket.io')(app);
 const fs = require('fs');
 const {exec} = require('child_process');
 
-app.listen(80);
+app.listen(81);
 
 function handler(req, res) {
     fs.readFile(__dirname + '/index.html',
@@ -18,6 +18,7 @@ function handler(req, res) {
         });
 }
 
+
 io.on('connection', (socket) => {
     sendList();
 
@@ -26,11 +27,20 @@ io.on('connection', (socket) => {
     });
 
     socket.on('netsh add', (data) => {
-        const cmd = `netsh interface portproxy add v4tov4 listenport=${data.listenPort} listenaddress=${data.listenAddress} connectport=${data.connectPort} connectaddress=${data.connectAddress}`;
+        const path = 'C:\\Windows\\System32\\drivers\\etc\\hosts_copy';
+        fs.readFile(path, function read(err, d) {
+            if (err) {
+                throw err;
+            }
 
-        exec(cmd, (err, stdout, stderr) => {
-            sendList();
+            console.log(d.toString());
         });
+
+        // const cmd = `netsh interface portproxy add v4tov4 listenport=${data.listenPort} listenaddress=${data.listenAddress} connectport=${data.connectPort} connectaddress=${data.connectAddress}`;
+        //
+        // exec(cmd, (err, stdout, stderr) => {
+        //     sendList();
+        // });
     });
 
     socket.on('netsh delete', (data) => {
@@ -44,6 +54,16 @@ io.on('connection', (socket) => {
     function sendList() {
         exec('netsh interface portproxy show all', (err, stdout, stderr) => {
             socket.emit('netsh list', stdout);
+
+            const path = 'C:\\Windows\\System32\\drivers\\etc\\hosts_copy';
+
+            fs.readFile(path, function read(err, data) {
+                if (err) {
+                    throw err;
+                }
+
+                socket.emit('host file', data.toString());
+            });
         });
     }
 });

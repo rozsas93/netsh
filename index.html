@@ -31,8 +31,12 @@
 </div>
 
 <div class="add">
+    <label>Domain</label>
+    <input type="text" id="input-host-domain"/>
+
     <label>ListenAddress</label>
     <input type="text" id="input-listen-address"/>
+
     <label>ListenPort</label>
     <input type="number" id="input-listen-port"/>
 
@@ -45,11 +49,12 @@
     <input type="button" value="add" id="add-button"/>
 </div>
 
+<br><br><br>
 <label>Delete</label>
 <input type="number" id="delete-id"/>
 <input type="button" id="delete-button" value="Delete" />
 
-<table id="table">
+<table id="table-netsh">
 
 </table>
 
@@ -59,11 +64,12 @@
     document.addEventListener('DOMContentLoaded', () => {
         var netshList = [];
 
-        const socket = io('http://localhost');
+        const socket = io('http://localhost:81');
 
         /** received events */
         socket.on('netsh list', (data) => {
             netshList = [];
+
             const lastIndex = data.lastIndexOf('-');
             data = data.substr(lastIndex + 1).replace(/\r?\n|\r/g, ' ').replace(/  +/g, ' ').trim().split(' ');
 
@@ -82,8 +88,32 @@
                     connectPort
                 })
             }
+        });
 
-            generateTable();
+        socket.on('host file', data => {
+            hosts = [];
+
+            data = data.replace(/\t/g, ' ').replace(/ +/g, ' ').replace(/\r?\n|\r/g, ' ').split(' ');
+
+            for(let i = 0; i < data.length; i++) {
+                const ip = data[i];
+                const domain = data[++i];
+
+                hosts.push(
+                    {ip,domain}
+                )
+            }
+
+
+            hosts.map(h => {
+                const net = netshList.find(n => n.listenAddress === h.ip );
+                net.domain = h.domain;
+            });
+
+            generateTable(
+                document.getElementById('table-netsh'),
+                netshList
+            );
         });
 
 
@@ -98,12 +128,14 @@
         });
 
         netshAddButton.addEventListener('click', function() {
+            var domain = document.getElementById('input-host-domain').value;
             var listenAddress = document.getElementById('input-listen-address').value;
             var listenPort = document.getElementById('input-listen-port').value;
             var connectAddress = document.getElementById('input-connect-address').value;
             var connectPort = document.getElementById('input-connect-port').value;
 
             socket.emit('netsh add', {
+                domain,
                 listenAddress,
                 listenPort,
                 connectAddress,
@@ -118,58 +150,29 @@
             socket.emit('netsh delete', el);
         });
 
-        function generateTable() {
-            const table = document.getElementById('table');
+        function generateTable(table, data) {
             table.innerHTML = "";
 
             const headerTr = document.createElement('tr');
-
-            const headerId = document.createElement('th');
-            headerId.innerText = 'ID';
-
-            const headerTh1 = document.createElement('th');
-            headerTh1.innerText = "ListenAddress";
-            const headerTh2 = document.createElement('th');
-            headerTh2.innerText = "ListenPort";
-            const headerTh3 = document.createElement('th');
-            headerTh3.innerText = "ConnectAddress";
-            const headerTh4 = document.createElement('th');
-            headerTh4.innerText = "ConnectPort";
-
-            headerTr.appendChild(headerId);
-            headerTr.appendChild(headerTh1);
-            headerTr.appendChild(headerTh2);
-            headerTr.appendChild(headerTh3);
-            headerTr.appendChild(headerTh4);
-
+            for(let k in data[0]) {
+                const th = document.createElement('th');
+                th.innerText = k;
+                headerTr.appendChild(th);
+            }
             table.appendChild(headerTr);
 
-            for(item of netshList) {
+            for(var i = 0;i < data.length; i++) {
                 const tr = document.createElement('tr');
 
-                const headerId = document.createElement('td');
-                headerId.innerText = item.id;
-
-                const header1 = document.createElement('td');
-                header1.innerText = item.listenAddress;
-
-                const header2 = document.createElement('td');
-                header2.innerText = item.listenPort;
-
-                const header3 = document.createElement('td');
-                header3.innerText = item.connectAddress;
-
-                const header4 = document.createElement('td');
-                header4.innerText = item.connectPort;
-
-                tr.appendChild(headerId);
-                tr.appendChild(header1);
-                tr.appendChild(header2);
-                tr.appendChild(header3);
-                tr.appendChild(header4);
+                for(let k in data[i]) {
+                    const td = document.createElement('td');
+                    td.innerText = data[i][k];
+                    tr.appendChild(td);
+                }
 
                 table.appendChild(tr);
             }
+
         }
 
 
