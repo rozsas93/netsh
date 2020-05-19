@@ -1,0 +1,61 @@
+h1 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 20px;
+}
+table {
+    padding: 5px;
+    background: #dee6d9;
+    border-collapse: collapse;
+    box-shadow: 0 0 4px 2px lightgray;
+    margin-bottom: 20px;
+    width: 100%;
+
+    tr {
+        &:nth-child(even) {
+            background: #f1f4ff;
+        }
+
+        .edit-action {
+            display: none;
+        }
+
+        &.editing {
+            .action {
+                display: none;
+            }
+
+            .edit-action {
+                display: table-cell;
+            }
+        }
+
+
+    }
+
+    td, th {
+        padding: 5px;
+        &.editing {
+            background: white;
+            box-shadow: 0 0 0 2px inset #595c57;
+        }
+    }
+    th {
+        text-align:left;
+    }
+
+    .action, .edit-action {
+        font-size: 13px;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        color: gray;
+        &:hover {
+            color: black;
+        }
+    }
+    .add-button {
+        padding: 2px 20px;
+        margin-top: 15px;
+    }
+}

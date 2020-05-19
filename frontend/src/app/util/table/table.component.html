@@ -1,0 +1,28 @@
+<ng-container *ngIf="tableData">
+    <h1 *ngIf="tableData.title" [innerText]="tableData.title"></h1>
+    <table #table>
+        <thead>
+        <tr>
+            <th *ngFor="let header of tableData.header" [innerText]="header.title"></th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let data of tableData.data">
+                <td
+                    *ngFor="let header of tableData.header"
+                    [attr.data-property]="header.property"
+                    [attr.data-editable]="header.editable !== false"
+                    [innerText]="data[header.property]"></td>
+
+                <td class="action" [innerText]="'copy'" (click)="onClickCopy(data)">
+                <td class="action" [innerText]="'edit'" (click)="onClickEditStart(data)">
+                <td class="action" [innerText]="'delete'" (click)="onClickDelete(data)">
+
+                <td class="edit-action cancel" (click)="onClickCancel($event, data)">Cancel</td>
+                <td class="edit-action save" (click)="onClickSave($event, data)">Save</td>
+            </tr>
+        </tbody>
+
+        <input class="add-button" type="button" value="Add" (click)="onClickAdd()" />
+    </table>
+</ng-container>

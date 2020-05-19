@@ -1,69 +1,69 @@
-const app = require('http').createServer(handler);
+const app = require('http').createServer();
 const io = require('socket.io')(app);
 const fs = require('fs');
-const {exec} = require('child_process');
+const {execSync} = require('child_process');
+const hostile = require('hostile');
 
-app.listen(81);
+const port = 81;
+app.listen(port);
+console.log(`App listens on port: ${port}`);
 
-function handler(req, res) {
-    fs.readFile(__dirname + '/index.html',
-        (err, data) => {
-            if (err) {
-                res.writeHead(500);
-                return res.end('Error loading index.html');
-            }
+io.on('connection', (socket) => {
+    /** host things */
+    socket.on('get host list', () => {
+        socket.emit('host list', getHostFile());
+    });
 
-            res.writeHead(200);
-            res.end(data);
-        });
+    socket.on('edit host', (host) => {
+        editHost(host.ip, host.domain);
+    });
+
+    socket.on('delete host', (host) => {
+        deleteHost(host.ip, host.domain);
+    });
+
+    /** proxy things */
+    socket.on('get proxy list', () => {
+        socket.emit('proxy list', getPortProxy());
+    });
+
+    socket.on('edit proxy', (proxy) => {
+        editProxy(proxy.listenAddress, proxy.listenPort, proxy.connectAddress, proxy.connectPort);
+    });
+
+    socket.on('delete proxy', (proxy) => {
+        deletePortProxy(proxy.listenAddress, proxy.listenPort);
+    });
+});
+
+function getHostFile() {
+    return hostile.getFile(hostile.HOSTS);
+}
+
+function deleteHost(ip, host) {
+    return hostile.remove(ip, host);
+}
+
+function editHost(ip, host) {
+    return hostile.set(ip, host);
 }
 
 
-io.on('connection', (socket) => {
-    sendList();
+function getPortProxy() {
+    const cmd = `netsh interface portproxy show v4tov4`;
+    let result = execSync(cmd).toString();
 
-    socket.on('netsh get list', async (data) => {
-        sendList();
-    });
+    return result.split('\r\n').filter(l => l).splice(3).map(e => e.replace(/ +/g, ' ').split( ' '));
+}
 
-    socket.on('netsh add', (data) => {
-        const path = 'C:\\Windows\\System32\\drivers\\etc\\hosts_copy';
-        fs.readFile(path, function read(err, d) {
-            if (err) {
-                throw err;
-            }
+function deletePortProxy(listenaddress, listenport) {
+    const cmd = `netsh interface portproxy delete v4tov4 listenport=${listenport} listenaddress=${listenaddress}`;
 
-            console.log(d.toString());
-        });
+    return execSync(cmd).toString();
+}
 
-        // const cmd = `netsh interface portproxy add v4tov4 listenport=${data.listenPort} listenaddress=${data.listenAddress} connectport=${data.connectPort} connectaddress=${data.connectAddress}`;
-        //
-        // exec(cmd, (err, stdout, stderr) => {
-        //     sendList();
-        // });
-    });
+function editProxy(listenaddress, listenport, connectaddress, connectport) {
+    const cmd = `netsh interface portproxy add v4tov4 listenport=${listenport} listenaddress=${listenaddress} connectaddress=${connectaddress} connectport=${connectport}`;
 
-    socket.on('netsh delete', (data) => {
-        const cmd = `netsh interface portproxy delete v4tov4 listenport=${data.listenPort} listenaddress=${data.listenAddress}`;
-
-        exec(cmd, (err, stdout, stderr) => {
-            sendList();
-        });
-    });
-
-    function sendList() {
-        exec('netsh interface portproxy show all', (err, stdout, stderr) => {
-            socket.emit('netsh list', stdout);
-
-            const path = 'C:\\Windows\\System32\\drivers\\etc\\hosts_copy';
-
-            fs.readFile(path, function read(err, data) {
-                if (err) {
-                    throw err;
-                }
-
-                socket.emit('host file', data.toString());
-            });
-        });
-    }
-});
+    return execSync(cmd).toString();
+}

@@ -1,0 +1,49 @@
+section {
+    display: flex;
+    height: 100vh;
+
+    article.table  {
+        margin-right: 25px;
+        padding: 0 25px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: scroll;
+
+        & > * {
+            flex: 1;
+        }
+    }
+
+    article.summary {
+        flex: 1;
+        margin-top: 24px;
+        overflow-y: scroll;
+    }
+}
+::ng-deep .node-wrapper {
+    //border-bottom: 1px solid gray;
+}
+
+::ng-deep {
+    .tree-node-level-1 {
+        .node-wrapper {
+            background: #e1e1e1
+        }
+    }
+
+    .tree-node-level-2 {
+        .node-wrapper {
+            background: #f0f0f0;
+        }
+    }
+
+    .tree-node-level-3 {
+        .node-wrapper {
+            white-space: pre;
+            background: white;
+            border-bottom: 2px solid #e1e1e1;
+        }
+    }
+
+
+}

@@ -1,0 +1,11 @@
+<section>
+    <article class="table">
+        <app-table #host [tableData]="hostTable" (edit)="onEditHost($event)" (delete)="onDeleteHost($event)"></app-table>
+        <app-table #portProxy [tableData]="proxyTable" (edit)="onEditProxy($event)" (delete)="onDeleteProxy($event)"></app-table>
+    </article>
+    <article class="summary">
+        <tree-root #tree [nodes]="summaryData" [options]="summaryDataOptions"></tree-root>
+    </article>
+</section>
+
+
